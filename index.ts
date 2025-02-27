@@ -1,6 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs'
-import * as path from 'path'
 import * as dotEnvFlow from 'dotenv-flow'
 import { expand as dotenvExpand } from 'dotenv-expand'
 
@@ -43,7 +42,7 @@ export function processEnv(
       result = dotenvExpand(result)
 
       if (result.parsed) {
-        log.info(`Loaded env from ${path.join(dir || '', envFile.path)}`)
+        log.info(`Loaded env from ${envFile.path}`)
       }
 
       for (const key of Object.keys(result.parsed || {})) {
@@ -56,7 +55,7 @@ export function processEnv(
       }
     } catch (err) {
       log.error(
-        `Failed to load env from ${path.join(dir || '', envFile.path)}`,
+        `Failed to load env from ${envFile.path}`,
         err
       )
     }
