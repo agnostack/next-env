@@ -78,11 +78,12 @@ export function loadEnvConfig(
   if (combinedEnv) return { combinedEnv, loadedEnvFiles: cachedLoadedEnvFiles }
 
   const isTest = process.env.NODE_ENV === 'test'
+  const isDev = dev ?? process.env.NODE_ENV === 'development'
   const _environment = [
     process.env.BUILD_ENV,
     process.env.SITE_ENV,
     process.env.ENVIRONMENT,
-    isTest ? 'test' : dev ? 'development' : 'production'
+    isTest ? 'test' : isDev ? 'development' : 'production'
   ].find(Boolean) as string
 
   // move to listFiles instead of listDotenvFiles after version 4.0.0
