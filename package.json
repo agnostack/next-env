@@ -30,9 +30,10 @@
     "prepublish": "yarn release && yarn types"
   },
   "devDependencies": {
+    "@types/dotenv-flow": "3.2.0",
     "@types/node": "18.19.1",
     "@vercel/ncc": "0.33.1",
-    "dotenv": "10.0.0",
+    "dotenv-flow": "3.2.0",
     "dotenv-expand": "8.0.1",
     "typescript": "5.4.2"
   }

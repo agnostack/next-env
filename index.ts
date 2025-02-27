@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs'
 import * as path from 'path'
-import * as dotenv from 'dotenv'
+import dotEnvFlow from 'dotenv-flow'
 import { expand as dotenvExpand } from 'dotenv-expand'
 
 export type Env = { [key: string]: string }
@@ -33,12 +33,13 @@ export function processEnv(
   process.env.__NEXT_PROCESSED_ENV = 'true'
 
   const origEnv = Object.assign({}, process.env)
-  const parsed: dotenv.DotenvParseOutput = {}
+  const parsed: dotEnvFlow.DotenvParseOutput = {}
 
   for (const envFile of loadedEnvFiles) {
     try {
-      let result: dotenv.DotenvConfigOutput = {}
-      result.parsed = dotenv.parse(envFile.contents)
+      let result: dotEnvFlow.DotenvLoadOutput = {}
+      result.parsed = dotEnvFlow.parse(envFile.path)
+      console.log(`>>> > result.parsed:`, result.parsed)
 
       result = dotenvExpand(result)
 
@@ -78,37 +79,40 @@ export function loadEnvConfig(
   if (combinedEnv) return { combinedEnv, loadedEnvFiles: cachedLoadedEnvFiles }
 
   const isTest = process.env.NODE_ENV === 'test'
-  const mode = isTest ? 'test' : dev ? 'development' : 'production'
-  const dotenvFiles = [
-    `.env.${mode}.local`,
-    // Don't include `.env.local` for `test` environment
-    // since normally you expect tests to produce the same
-    // results for everyone
-    mode !== 'test' && `.env.local`,
-    `.env.${mode}`,
-    '.env',
-  ].filter(Boolean) as string[]
+  const _environment = [
+    process.env.BUILD_ENV,
+    process.env.SITE_ENV,
+    process.env.ENVIRONMENT,
+    isTest ? 'test' : dev ? 'development' : 'production'
+  ].find(Boolean) as string
 
-  for (const envFile of dotenvFiles) {
+  // TODO: move to listFiles instead of listDotenvFiles after version 4.0.0
+  const dotenvFiles = dotEnvFlow.listDotenvFiles(dir, {
+    node_env: _environment,
+  })
+  console.log(`>>> > dotenvFiles:`, dotenvFiles)
+
+  for (const dotEnvFile of dotenvFiles) {
     // only load .env if the user provided has an env config file
-    const dotEnvPath = path.join(dir, envFile)
+    const dotEnvPath_OLD = path.join(dir, dotEnvFile)
+    console.log(`>>> > dotEnvFile:`, {dotEnvFile, dotEnvPath_OLD})
 
     try {
-      const stats = fs.statSync(dotEnvPath)
+      const stats = fs.statSync(dotEnvFile)
 
       // make sure to only attempt to read files
       if (!stats.isFile()) {
         continue
       }
 
-      const contents = fs.readFileSync(dotEnvPath, 'utf8')
+      const contents = fs.readFileSync(dotEnvFile, 'utf8')
       cachedLoadedEnvFiles.push({
-        path: envFile,
+        path: dotEnvFile,
         contents,
       })
     } catch (err: any) {
       if (err.code !== 'ENOENT') {
-        log.error(`Failed to load env from ${envFile}`, err)
+        log.error(`Failed to load env from ${dotEnvFile}`, err)
       }
     }
   }
