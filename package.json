@@ -22,15 +22,18 @@
     "types"
   ],
   "scripts": {
+    "tsc": "npx -p typescript tsc",
     "dev": "ncc build ./index.ts -w -o dist/",
-    "prerelease": "rimraf ./dist/",
-    "types": "tsc index.ts --declaration --emitDeclarationOnly --declarationDir types --esModuleInterop",
+    "prerelease": "npx rimraf@4.4.1 ./dist/",
+    "types": "yarn tsc index.ts --declaration --emitDeclarationOnly --declarationDir types --esModuleInterop",
     "release": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
     "prepublish": "yarn release && yarn types"
   },
   "devDependencies": {
+    "@types/node": "18.19.1",
     "@vercel/ncc": "0.33.1",
     "dotenv": "10.0.0",
-    "dotenv-expand": "8.0.1"
+    "dotenv-expand": "8.0.1",
+    "typescript": "5.4.2"
   }
 }
