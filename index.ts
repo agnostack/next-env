@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs'
 import * as path from 'path'
-import dotEnvFlow from 'dotenv-flow'
+import * as dotEnvFlow from 'dotenv-flow'
 import { expand as dotenvExpand } from 'dotenv-expand'
 
 export type Env = { [key: string]: string }
@@ -39,7 +39,6 @@ export function processEnv(
     try {
       let result: dotEnvFlow.DotenvLoadOutput = {}
       result.parsed = dotEnvFlow.parse(envFile.path)
-      console.log(`>>> > result.parsed:`, result.parsed)
 
       result = dotenvExpand(result)
 
@@ -86,17 +85,13 @@ export function loadEnvConfig(
     isTest ? 'test' : dev ? 'development' : 'production'
   ].find(Boolean) as string
 
-  // TODO: move to listFiles instead of listDotenvFiles after version 4.0.0
+  // move to listFiles instead of listDotenvFiles after version 4.0.0
   const dotenvFiles = dotEnvFlow.listDotenvFiles(dir, {
     node_env: _environment,
   })
-  console.log(`>>> > dotenvFiles:`, dotenvFiles)
 
   for (const dotEnvFile of dotenvFiles) {
     // only load .env if the user provided has an env config file
-    const dotEnvPath_OLD = path.join(dir, dotEnvFile)
-    console.log(`>>> > dotEnvFile:`, {dotEnvFile, dotEnvPath_OLD})
-
     try {
       const stats = fs.statSync(dotEnvFile)
 
