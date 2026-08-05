@@ -22,15 +22,17 @@
   ],
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
-    "prerelease": "node ../../scripts/rm.mjs dist",
+    "prerelease": "pnpm dlx rimraf@latest dist",
     "types": "tsc --declaration --emitDeclarationOnly --declarationDir dist",
     "release": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
     "build": "pnpm release && pnpm types",
     "prepublishOnly": "cd ../../ && turbo run build"
   },
   "devDependencies": {
+    "@types/node": "22",
     "@vercel/ncc": "0.34.0",
-    "dotenv": "16.3.1",
-    "dotenv-expand": "10.0.0"
+    "dotenv-expand": "10.0.0",
+    "dotenv-flow": "4.1.0",
+    "typescript": "5.2.2"
   }
 }

@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import * as fs from 'fs'
-import * as path from 'path'
-import * as dotenv from 'dotenv'
+import * as fs from 'node:fs'
+import * as dotEnvFlow from 'dotenv-flow'
 import { expand as dotenvExpand } from 'dotenv-expand'
 
 export type Env = { [key: string]: string | undefined }
@@ -48,7 +47,7 @@ export function processEnv(
   log: Log = console,
   forceReload = false,
   onReload?: (envFilePath: string) => void
-) {
+): [Env, Env | undefined] {
   if (!initialEnv) {
     initialEnv = Object.assign({}, process.env)
   }
@@ -57,18 +56,18 @@ export function processEnv(
     !forceReload &&
     (process.env.__NEXT_PROCESSED_ENV || loadedEnvFiles.length === 0)
   ) {
-    return [process.env as Env]
+    return [process.env as Env, undefined]
   }
   // flag that we processed the environment values already.
   process.env.__NEXT_PROCESSED_ENV = 'true'
 
   const origEnv = Object.assign({}, initialEnv)
-  const parsed: dotenv.DotenvParseOutput = {}
+  const parsed: dotEnvFlow.DotenvFlowParseResult = {}
 
   for (const envFile of loadedEnvFiles) {
     try {
-      let result: dotenv.DotenvConfigOutput = {}
-      result.parsed = dotenv.parse(envFile.contents)
+      let result: dotEnvFlow.DotenvFlowLoadResult = {}
+      result.parsed = dotEnvFlow.parse(envFile.path)
 
       result = dotenvExpand(result)
 
@@ -97,7 +96,7 @@ export function processEnv(
       envFile.env = result.parsed || {}
     } catch (err) {
       log.error(
-        `Failed to load env from ${path.join(dir || '', envFile.path)}`,
+        `Failed to load env from ${envFile.path}`,
         err
       )
     }
@@ -134,38 +133,36 @@ export function loadEnvConfig(
   cachedLoadedEnvFiles = []
 
   const isTest = process.env.NODE_ENV === 'test'
-  const mode = isTest ? 'test' : dev ? 'development' : 'production'
-  const dotenvFiles = [
-    `.env.${mode}.local`,
-    // Don't include `.env.local` for `test` environment
-    // since normally you expect tests to produce the same
-    // results for everyone
-    mode !== 'test' && `.env.local`,
-    `.env.${mode}`,
-    '.env',
-  ].filter(Boolean) as string[]
+  const isDev = dev ?? process.env.NODE_ENV === 'development'
+  const _environment = [
+    process.env.BUILD_ENV,
+    process.env.SITE_ENV,
+    process.env.ENVIRONMENT,
+    isTest ? 'test' : isDev ? 'development' : 'production'
+  ].find(Boolean) as string
 
-  for (const envFile of dotenvFiles) {
-    // only load .env if the user provided has an env config file
-    const dotEnvPath = path.join(dir, envFile)
+  const dotenvFiles = dotEnvFlow
+    .listFiles({ path: dir, node_env: _environment })
+    .reverse()
 
+  for (const dotEnvFile of dotenvFiles) {
     try {
-      const stats = fs.statSync(dotEnvPath)
+      const stats = fs.statSync(dotEnvFile)
 
       // make sure to only attempt to read files or named pipes
       if (!stats.isFile() && !stats.isFIFO()) {
         continue
       }
 
-      const contents = fs.readFileSync(dotEnvPath, 'utf8')
+      const contents = fs.readFileSync(dotEnvFile, 'utf8')
       cachedLoadedEnvFiles.push({
-        path: envFile,
+        path: dotEnvFile,
         contents,
         env: {}, // This will be populated in processEnv
       })
     } catch (err: any) {
       if (err.code !== 'ENOENT') {
-        log.error(`Failed to load env from ${envFile}`, err)
+        log.error(`Failed to load env from ${dotEnvFile}`, err)
       }
     }
   }
