@@ -1,1 +1,3 @@
-types.DS_Store
+types
+.DS_Store
+node_modules
