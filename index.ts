@@ -134,7 +134,14 @@ export function loadEnvConfig(
   cachedLoadedEnvFiles = []
 
   const isTest = process.env.NODE_ENV === 'test'
-  const mode = isTest ? 'test' : dev ? 'development' : 'production'
+  // NOTE: fork of @next/env — upstream picks the mode from NODE_ENV alone, so `.env.staging`
+  // is never reachable. BUILD_ENV > SITE_ENV > ENVIRONMENT take precedence when set.
+  const mode = [
+    process.env.BUILD_ENV,
+    process.env.SITE_ENV,
+    process.env.ENVIRONMENT,
+    isTest ? 'test' : dev ? 'development' : 'production',
+  ].find(Boolean) as string
   const dotenvFiles = [
     `.env.${mode}.local`,
     // Don't include `.env.local` for `test` environment
