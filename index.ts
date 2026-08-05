@@ -2,6 +2,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
+import * as dotenvFlow from 'dotenv-flow'
 import { expand as dotenvExpand } from 'dotenv-expand'
 
 export type Env = { [key: string]: string | undefined }
@@ -142,15 +143,12 @@ export function loadEnvConfig(
     process.env.ENVIRONMENT,
     isTest ? 'test' : dev ? 'development' : 'production',
   ].find(Boolean) as string
-  const dotenvFiles = [
-    `.env.${mode}.local`,
-    // Don't include `.env.local` for `test` environment
-    // since normally you expect tests to produce the same
-    // results for everyone
-    mode !== 'test' && `.env.local`,
-    `.env.${mode}`,
-    '.env',
-  ].filter(Boolean) as string[]
+  // NOTE: dotenv-flow lists files lowest-priority first, and processEnv below keeps the first
+  // value it sees — so the list is reversed to put the most specific file first.
+  const dotenvFiles = dotenvFlow
+    .listFiles({ path: dir, node_env: mode })
+    .reverse()
+    .map((dotenvFile) => path.relative(dir, dotenvFile))
 
   for (const envFile of dotenvFiles) {
     // only load .env if the user provided has an env config file
