@@ -143,12 +143,12 @@ export function loadEnvConfig(
 
   const dotenvFiles = dotEnvFlow
     .listFiles({ path: dir, node_env: _environment })
-    // .reverse()
+    .reverse()
 
-  console.log(`>>> > loadEnvConfig > dotenvFiles:`, dotenvFiles)
+  console.log(`>>> > loadEnvConfig > dotenvFiles2:`, dotenvFiles)
 
   for (const dotEnvFile of dotenvFiles) {
-    console.log(`>>> > loadEnvConfig > dotEnvFile:`, dotEnvFile)
+    console.log(`>>> > loadEnvConfig > dotEnvFile2:`, dotEnvFile)
 
     try {
       const stats = fs.statSync(dotEnvFile)
