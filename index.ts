@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs'
 import * as path from 'path'
-import * as dotenv from 'dotenv'
 import * as dotenvFlow from 'dotenv-flow'
 import { expand as dotenvExpand } from 'dotenv-expand'
 
@@ -64,12 +63,12 @@ export function processEnv(
   process.env.__NEXT_PROCESSED_ENV = 'true'
 
   const origEnv = Object.assign({}, initialEnv)
-  const parsed: dotenv.DotenvParseOutput = {}
+  const parsed: dotenvFlow.DotenvFlowParseResult = {}
 
   for (const envFile of loadedEnvFiles) {
     try {
-      let result: dotenv.DotenvConfigOutput = {}
-      result.parsed = dotenv.parse(envFile.contents)
+      let result: { parsed?: dotenvFlow.DotenvFlowParseResult } = {}
+      result.parsed = dotenvFlow.parse(path.join(dir || '', envFile.path))
 
       result = dotenvExpand(result)
 
